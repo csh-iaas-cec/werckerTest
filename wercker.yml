@@ -1,36 +1,54 @@
-# This references the default nodejs container from
-# # the Docker Hub: https://registry.hub.docker.com/_/node/
-# # If you want Nodesource's container you would reference nodesource/node
-# # Read more about containers on our dev center
-# # https://devcenter.wercker.com/overview-and-core-concepts/containers/
-# box: node
-# # This is the build pipeline. Pipelines are the core of wercker
-# # Read more about pipelines on our dev center
-# # https://devcenter.wercker.com/development/pipelines/
-#
-# # You can also use services such as databases. Read more on our dev center:
-# # https://devcenter.wercker.com/administration/services/
-# # services:
-#     # - postgres
-#         # https://devcenter.wercker.com/administration/services/examples/postgresql/
-#
-#             # - mongo
-#                 # https://devcenter.wercker.com/administration/services/examples/mongodb/
-#                 build:
-#                   # The steps that will be executed on build
-#                     # Steps make up the actions in your pipeline
-#                       # Read more about steps on our dev center:
-#                         # https://devcenter.wercker.com/development/steps/
-#                           steps:
-#                               # A step that executes `npm install` command
-#                                   - npm-install
-#                                       # A step that executes `npm test` command
-#                                           - npm-test
-#
-#                                               # A custom script step, name value is used in the UI
-#                                                   # and the code value contains the command that get executed
-#                                                       - script:
-#                                                               name: echo nodejs information
-#                                                                       code: |
-#                                                                                 echo "node version $(node -v) running"
-#                                                                                           echo "npm version $(npm -v) running"
+box: 
+  id: node:latest
+  ports: 
+    - "8080"
+    
+dev:
+  steps:
+    - npm-install
+    - internal/watch:
+        code: node app.js
+        reload: true
+
+# Build definition
+build:
+  # The steps that will be executed on build
+  steps:
+    - script:
+        code: export NODE_ENV='testing'
+    # A step that executes `npm install` command
+    - npm-install
+    # A step that executes `npm test` command
+    - npm-test
+
+    # A custom script step, name value is used in the UI
+    # and the code value contains the command that get executed
+    - script:
+        name: echo nodejs information
+        code: |
+          echo "node version $(node -v) running"
+          echo "npm version $(npm -v) running"
+### Docker Deployment
+deploy:
+        #this deploys to DockerHub
+        steps:
+        - internal/docker-scratch-push:
+                username: $DOCKER_USERNAME
+                password: $DOCKER_PASSWORD
+                repository: mdraghib/myfirstapp
+                cmd: ./myfirstapp
+server:
+        steps:
+        - install-packages:
+                packages: openssh-client openssh-server
+        - add-to-known_hosts:
+                hostname: 150.136.140.98
+                local: true
+        - add-ssh-key:
+                keyname: rd007_id_rsa
+        - script:
+             name: pull latest image
+             code: |
+                 ssh opc@150.136.140.98 docker pull mdraghib/myfirstapp:latest
+                 ssh opc@150.136.140.98 docker tag mdraghib/myfirstapp:latest mdraghib/myfirstapp:current
+                 ssh opc@150.136.140.98 docker rmi mdraghib/myfirstapp:latest
