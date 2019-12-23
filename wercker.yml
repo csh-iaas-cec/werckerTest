@@ -36,7 +36,6 @@ deploy:
                 username: $DOCKER_USERNAME
                 password: $DOCKER_PASSWORD
                 repository: mdraghib/myfirstapp
-                cmd: /usr/local/bin/node server.js
 server:
         steps:
         - install-packages:
