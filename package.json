@@ -25,7 +25,8 @@
     "python-shell": "^1.0.7",
     "randomstring": "^1.1.5",
     "shelljs": "^0.8.3",
-    "strftime": "^0.10.0"
+    "strftime": "^0.10.0",
+    "mocha": "1.6.0"
   },
   "devDependencies": {},
   "description": ""
